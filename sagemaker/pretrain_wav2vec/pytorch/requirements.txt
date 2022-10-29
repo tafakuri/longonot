@@ -3,3 +3,4 @@ torch >= 1.5
 torchaudio
 accelerate >= 0.5.0
 librosa
+tensorboard
