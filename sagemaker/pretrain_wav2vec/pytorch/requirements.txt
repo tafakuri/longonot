@@ -6,3 +6,4 @@ librosa
 tensorboard
 transformers
 huggingface_hub
+setuptools==59.5.0
