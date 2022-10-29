@@ -84,7 +84,7 @@ def parse_args():
         help="The names of the training data set splits to use (via the datasets library).",
     )
     parser.add_argument(
-        "--dataset_use_auth_token", action="store_true", help="Use Auth token when fetching dataset"
+        "--dataset_use_auth_token", default=False, type=lambda x: (str(x).lower() == 'true'), help="Use Auth token when fetching dataset"
     )
     parser.add_argument(
         "--preprocessing_num_workers",
@@ -257,7 +257,7 @@ def parse_args():
         default=1e-8,
         help="Epsilon for AdamW optimizer",
     )
-    parser.add_argument("--push_to_hub", action="store_true", help="Whether or not to push the model to the Hub.")
+    parser.add_argument("--push_to_hub", default=False, type=lambda x: (str(x).lower() == 'true'), help="Whether or not to push the model to the Hub.")
     parser.add_argument(
         "--hub_model_id", type=str, help="The name of the repository to keep in sync with the local `output_dir`."
     )
