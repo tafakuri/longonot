@@ -560,7 +560,7 @@ def main():
                 
                 # upload file to S3
                 vocab_input_path = f's3://{BUCKET}/{PREFIX}/vocab.json'
-                s3.put('vocab.json', vocab_input_path)
+                s3.put(vocab_file, vocab_input_path)
 
         # if tokenizer has just been created
         # it is defined by `tokenizer_class` if present in config else by `model_type`
