@@ -22,7 +22,7 @@ import tensorflow as tf
 # process arguments
 parser = argparse.ArgumentParser(description='Audio Dataset Processor')
 
-parser.add_argument('file_path', type=Path,
+parser.add_argument('--file_path', type=Path,
                     help='Path to the source file')
 
 parser.add_argument(
