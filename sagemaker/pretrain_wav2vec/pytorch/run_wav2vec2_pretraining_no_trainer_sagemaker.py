@@ -48,8 +48,6 @@ from transformers import (
 from transformers.models.wav2vec2.modeling_wav2vec2 import _compute_mask_indices, _sample_negative_indices
 #from transformers.utils import get_full_repo_name, send_example_telemetry
 
-
-
 logger = get_logger(__name__)
 
 import sys
@@ -419,6 +417,27 @@ def main():
         elif args.output_dir is not None:
             os.makedirs(args.output_dir, exist_ok=True)
     accelerator.wait_for_everyone()
+
+    # install libsndfile
+    print("Run install_sndfile.sh")
+    #os.System('sh install_sndfile.sh')
+
+    import subprocess
+
+    # Enter "google.com", without quotes.
+    proc = subprocess.run(
+        'sh install_sndfile.sh',
+        shell=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True
+    )
+    # The function blocks until the shell command is completed.
+    print(proc.stdout)
+    # PING google.com (142.250.74.142) 56(84) bytes of data.
+    # 64 bytes from ******: icmp_seq=1 ttl=115 time=5.29 ms
+    # ...
+    print(proc.stderr)
 
     # 1. Download and create train, validation dataset
     # We load all dataset configuration and datset split pairs passed in
