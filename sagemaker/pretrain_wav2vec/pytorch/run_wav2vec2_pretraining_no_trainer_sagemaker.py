@@ -270,6 +270,10 @@ def parse_args():
 
     if args.output_dir is not None:
         os.makedirs(args.output_dir, exist_ok=True)
+    
+    if args.hub_token:
+        from huggingface_hub.hf_api import HfFolder
+        HfFolder.save_token(args.hub_token)
 
     return args
 
@@ -382,7 +386,7 @@ def main():
     # Sending telemetry. Tracking the example usage helps us better allocate resources to maintain them. The
     # information sent is the one passed as arguments along with your Python/PyTorch versions.
     # send_example_telemetry("run_wav2vec2_pretraining_no_trainer", args)
-
+push_to_hub
     # Initialize the accelerator. We will let the accelerator handle device placement for us in this example.
     accelerator = Accelerator()
     logger.info(accelerator.state, main_process_only=False)
