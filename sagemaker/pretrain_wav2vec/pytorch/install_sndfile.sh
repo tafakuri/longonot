@@ -4,4 +4,4 @@ tar -xf libsndfile-1.0.31.tar.bz2
 cd libsndfile-1.0.31/
 ./configure
 make
-sudo make install
+make install
