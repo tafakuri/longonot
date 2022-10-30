@@ -186,7 +186,7 @@ def parse_args():
     )
     parser.add_argument(
         "--gradient_checkpointing",
-        action="store_true",
+        default=False, type=lambda x: (str(x).lower() == 'true'),
         help="If True, use gradient checkpointing to save memory at the expense of slower backward pass.",
     )
     parser.add_argument(
