@@ -8,3 +8,4 @@ transformers
 huggingface_hub >= 0.2.1
 setuptools==59.5.0
 wandb
+soundfile
