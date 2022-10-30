@@ -504,7 +504,7 @@ def main():
             if not os.path.isfile(vocab_file):
                 os.makedirs(tokenizer_name_or_path, exist_ok=True)
                 vocab_input_path = f's3://{BUCKET}/{PREFIX}/vocab.json'
-                s3.download_file(vocab_input_path.split('/')[2],vocab_input_path.split('/')[3]+'/vocab.json','vocab.json')
+                s3.download(vocab_input_path.split('/')[2],vocab_input_path.split('/')[3]+'/vocab.json','vocab.json')
                 shutil.copyfile("vocab.json", vocab_file)
 
         # if tokenizer has just been created
