@@ -559,7 +559,8 @@ def main():
                     json.dump(vocab_dict, file)
                 
                 # upload file to S3
-                s3.upload_file('vocab.json', BUCKET, f'{PREFIX}/vocab.json')
+                vocab_input_path = f's3://{BUCKET}/{PREFIX}/vocab.json'
+                s3.put('vocab.json', vocab_input_path)
 
         # if tokenizer has just been created
         # it is defined by `tokenizer_class` if present in config else by `model_type`
