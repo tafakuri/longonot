@@ -463,8 +463,7 @@ def main():
     vectorized_datasets["train"]  = load_from_disk(training_input_path, fs=s3)
     vectorized_datasets["eval"]  = load_from_disk(test_input_path, fs=s3)
 
-    vocab_input_path = f's3://{BUCKET}/{PREFIX}/vocab.json'
-    s3.download_file(vocab_input_path.split('/')[2],vocab_input_path.split('/')[3]+'/vocab.json','vocab.json')
+    
 
     # save special tokens for tokenizer
     word_delimiter_token = data_args.word_delimiter_token
@@ -504,6 +503,8 @@ def main():
         with training_args.main_process_first(desc="dataset map vocabulary creation"):
             if not os.path.isfile(vocab_file):
                 os.makedirs(tokenizer_name_or_path, exist_ok=True)
+                vocab_input_path = f's3://{BUCKET}/{PREFIX}/vocab.json'
+                s3.download_file(vocab_input_path.split('/')[2],vocab_input_path.split('/')[3]+'/vocab.json','vocab.json')
                 shutil.copyfile("vocab.json", vocab_file)
 
         # if tokenizer has just been created
