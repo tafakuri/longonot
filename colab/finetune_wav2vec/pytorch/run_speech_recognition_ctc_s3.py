@@ -173,9 +173,6 @@ class DataTrainingArguments:
         default="text",
         metadata={"help": "The name of the dataset column containing the text data. Defaults to 'text'"},
     )
-    dataset_s3_path: str = field(
-        default=None, metadata={"help": "The path to read dataset from in S3."}
-    )
     dataset_s3_bucket: str = field(
         default=None, metadata={"help": "The path to read dataset from in S3."}
     )
@@ -427,25 +424,9 @@ def main():
 
     # Set seed before initializing model.
     set_seed(training_args.seed)
-    
-    """
-    if(data_args.dataset_s3_path):
-        s3 = datasets.filesystems.S3FileSystem(key='AKIARYVVJ52TE25M3YFZ', secret='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')
-        if(s3.exists('common-voice-sw-dataset/v9_colab')):
-            training_dir = "s3://common-voice-sw-dataset/v9/train/"
-            test_dir = "s3://common-voice-sw-dataset/v9/test/"
-            vectorized_datasets = DatasetDict()
-            vectorized_datasets["train"]  = load_from_disk(training_dir, fs=s3)
-            vectorized_datasets["eval"]  = load_from_disk(test_dir, fs=s3)
-            
-            vocab_url = "s3://common-voice-sw-dataset/v9/vocab.json"
-            s3.download_file(vocab_url.split('/')[2],vocab_url.split('/')[3]+'/vocab.json','vocab.json')
-        else:
-            # run operations to load dataset and save to S3
-    """
+
+    # Initialize S3 filesystem
     s3 = datasets.filesystems.S3FileSystem(key='AKIARYVVJ52TE25M3YFZ', secret='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')
-    #BUCKET = "common-voice-sw-dataset"
-    #PREFIX = "v9_ctc"
 
     BUCKET = data_args.dataset_s3_bucket
     PREFIX = data_args.dataset_s3_prefix
@@ -458,12 +439,11 @@ def main():
     
     training_input_path = f's3://{BUCKET}/{PREFIX}/train'
     test_input_path = f's3://{BUCKET}/{PREFIX}/test'
+    vocab_input_path = f's3://{BUCKET}/{PREFIX}/vocab.json'
     
     vectorized_datasets = DatasetDict()
     vectorized_datasets["train"]  = load_from_disk(training_input_path, fs=s3)
     vectorized_datasets["eval"]  = load_from_disk(test_input_path, fs=s3)
-
-    
 
     # save special tokens for tokenizer
     word_delimiter_token = data_args.word_delimiter_token
@@ -503,8 +483,7 @@ def main():
         with training_args.main_process_first(desc="dataset map vocabulary creation"):
             if not os.path.isfile(vocab_file):
                 os.makedirs(tokenizer_name_or_path, exist_ok=True)
-                vocab_input_path = f's3://{BUCKET}/{PREFIX}/vocab.json'
-                s3.download(vocab_input_path.split('/')[2],vocab_input_path.split('/')[3]+'/vocab.json','vocab.json')
+                s3.download(vocab_input_path,'vocab.json')
                 shutil.copyfile("vocab.json", vocab_file)
 
         # if tokenizer has just been created
