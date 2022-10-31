@@ -21,6 +21,7 @@ import logging
 import os
 import re
 import sys
+import shutil
 import warnings
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional, Union
@@ -341,8 +342,7 @@ def main():
     set_seed(training_args.seed)
     
     s3 = datasets.filesystems.S3FileSystem(key='AKIARYVVJ52TE25M3YFZ', secret='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')
-    #BUCKET = "common-voice-sw-dataset"
-    #PREFIX = "v9_ctc"
+
 
     BUCKET = data_args.dataset_s3_bucket
     PREFIX = data_args.dataset_s3_prefix
