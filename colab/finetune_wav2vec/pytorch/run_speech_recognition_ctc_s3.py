@@ -326,48 +326,6 @@ class DataCollatorCTCWithPadding:
         return batch
 
 
-def create_vocabulary_from_data(
-    datasets: DatasetDict,
-    word_delimiter_token: Optional[str] = None,
-    unk_token: Optional[str] = None,
-    pad_token: Optional[str] = None,
-):
-    # Given training and test labels create vocabulary
-    def extract_all_chars(batch):
-        all_text = " ".join(batch["target_text"])
-        vocab = list(set(all_text))
-        return {"vocab": [vocab], "all_text": [all_text]}
-
-    vocabs = datasets.map(
-        extract_all_chars,
-        batched=True,
-        batch_size=-1,
-        keep_in_memory=True,
-        remove_columns=datasets["train"].column_names,
-    )
-
-    # take union of all unique characters in each dataset
-    vocab_set = functools.reduce(
-        lambda vocab_1, vocab_2: set(vocab_1["vocab"][0]) | set(vocab_2["vocab"][0]), vocabs.values()
-    )
-
-    vocab_dict = {v: k for k, v in enumerate(sorted(list(vocab_set)))}
-
-    # replace white space with delimiter token
-    if word_delimiter_token is not None:
-        vocab_dict[word_delimiter_token] = vocab_dict[" "]
-        del vocab_dict[" "]
-
-    # add unk and pad token
-    if unk_token is not None:
-        vocab_dict[unk_token] = len(vocab_dict)
-
-    if pad_token is not None:
-        vocab_dict[pad_token] = len(vocab_dict)
-
-    return vocab_dict
-
-
 def main():
     # See all possible arguments in src/transformers/training_args.py
     # or by passing the --help flag to this script.
