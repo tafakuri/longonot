@@ -28,9 +28,8 @@ from typing import Dict, List, Optional, Union
 import datasets
 import numpy as np
 import torch
-from datasets import DatasetDict, load_dataset,load_from_disk
+from datasets import DatasetDict, load_dataset
 
-import evaluate
 import transformers
 from transformers import (
     AutoConfig,
@@ -39,18 +38,12 @@ from transformers import (
     AutoProcessor,
     AutoTokenizer,
     HfArgumentParser,
-    Trainer,
     TrainingArguments,
-    Wav2Vec2Processor,
     set_seed,
 )
+
 from transformers.trainer_utils import get_last_checkpoint, is_main_process
-from transformers.utils import check_min_version, send_example_telemetry
 from transformers.utils.versions import require_version
-
-
-# Will error if the minimal version of Transformers is not installed. Remove at your own risks.
-# check_min_version("4.24.0.dev0")
 
 require_version("datasets>=1.18.0", "To fix: pip install -r examples/pytorch/speech-recognition/requirements.txt")
 
@@ -271,67 +264,6 @@ class DataTrainingArguments:
     )
 
 
-@dataclass
-class DataCollatorCTCWithPadding:
-    """
-    Data collator that will dynamically pad the inputs received.
-    Args:
-        processor (:class:`~transformers.AutoProcessor`)
-            The processor used for proccessing the data.
-        padding (:obj:`bool`, :obj:`str` or :class:`~transformers.tokenization_utils_base.PaddingStrategy`, `optional`, defaults to :obj:`True`):
-            Select a strategy to pad the returned sequences (according to the model's padding side and padding index)
-            among:
-            * :obj:`True` or :obj:`'longest'`: Pad to the longest sequence in the batch (or no padding if only a single
-              sequence if provided).
-            * :obj:`'max_length'`: Pad to a maximum length specified with the argument :obj:`max_length` or to the
-              maximum acceptable input length for the model if that argument is not provided.
-            * :obj:`False` or :obj:`'do_not_pad'` (default): No padding (i.e., can output a batch with sequences of
-              different lengths).
-        max_length (:obj:`int`, `optional`):
-            Maximum length of the ``input_values`` of the returned list and optionally padding length (see above).
-        max_length_labels (:obj:`int`, `optional`):
-            Maximum length of the ``labels`` returned list and optionally padding length (see above).
-        pad_to_multiple_of (:obj:`int`, `optional`):
-            If set will pad the sequence to a multiple of the provided value.
-            This is especially useful to enable the use of Tensor Cores on NVIDIA hardware with compute capability >=
-            7.5 (Volta).
-    """
-
-    processor: AutoProcessor
-    padding: Union[bool, str] = "longest"
-    pad_to_multiple_of: Optional[int] = None
-    pad_to_multiple_of_labels: Optional[int] = None
-
-    def __call__(self, features: List[Dict[str, Union[List[int], torch.Tensor]]]) -> Dict[str, torch.Tensor]:
-        # split inputs and labels since they have to be of different lenghts and need
-        # different padding methods
-        input_features = [{"input_values": feature["input_values"]} for feature in features]
-        label_features = [{"input_ids": feature["labels"]} for feature in features]
-
-        batch = self.processor.pad(
-            input_features,
-            padding=self.padding,
-            pad_to_multiple_of=self.pad_to_multiple_of,
-            return_tensors="pt",
-        )
-
-        labels_batch = self.processor.pad(
-            labels=label_features,
-            padding=self.padding,
-            pad_to_multiple_of=self.pad_to_multiple_of_labels,
-            return_tensors="pt",
-        )
-
-        # replace padding with -100 to ignore loss correctly
-        labels = labels_batch["input_ids"].masked_fill(labels_batch.attention_mask.ne(1), -100)
-
-        batch["labels"] = labels
-        if "attention_mask" in batch:
-            batch["attention_mask"] = batch["attention_mask"].to(torch.long)
-
-        return batch
-
-
 def create_vocabulary_from_data(
     datasets: DatasetDict,
     word_delimiter_token: Optional[str] = None,
@@ -387,25 +319,6 @@ def main():
     else:
         model_args, data_args, training_args = parser.parse_args_into_dataclasses()
 
-    # Sending telemetry. Tracking the example usage helps us better allocate resources to maintain them. The
-    # information sent is the one passed as arguments along with your Python/PyTorch versions.
-    send_example_telemetry("run_speech_recognition_ctc", model_args, data_args)
-
-    # Detecting last checkpoint.
-    last_checkpoint = None
-    if os.path.isdir(training_args.output_dir) and training_args.do_train and not training_args.overwrite_output_dir:
-        last_checkpoint = get_last_checkpoint(training_args.output_dir)
-        if last_checkpoint is None and len(os.listdir(training_args.output_dir)) > 0:
-            raise ValueError(
-                f"Output directory ({training_args.output_dir}) already exists and is not empty. "
-                "Use --overwrite_output_dir to overcome."
-            )
-        elif last_checkpoint is not None:
-            logger.info(
-                f"Checkpoint detected, resuming training at {last_checkpoint}. To avoid this behavior, change "
-                "the `--output_dir` or add `--overwrite_output_dir` to train from scratch."
-            )
-
     # Setup logging
     logging.basicConfig(
         format="%(asctime)s - %(levelname)s - %(name)s - %(message)s",
@@ -427,21 +340,6 @@ def main():
     # Set seed before initializing model.
     set_seed(training_args.seed)
     
-    """
-    if(data_args.dataset_s3_path):
-        s3 = datasets.filesystems.S3FileSystem(key='AKIARYVVJ52TE25M3YFZ', secret='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')
-        if(s3.exists('common-voice-sw-dataset/v9_colab')):
-            training_dir = "s3://common-voice-sw-dataset/v9/train/"
-            test_dir = "s3://common-voice-sw-dataset/v9/test/"
-            vectorized_datasets = DatasetDict()
-            vectorized_datasets["train"]  = load_from_disk(training_dir, fs=s3)
-            vectorized_datasets["eval"]  = load_from_disk(test_dir, fs=s3)
-            
-            vocab_url = "s3://common-voice-sw-dataset/v9/vocab.json"
-            s3.download_file(vocab_url.split('/')[2],vocab_url.split('/')[3]+'/vocab.json','vocab.json')
-        else:
-            # run operations to load dataset and save to S3
-    """
     s3 = datasets.filesystems.S3FileSystem(key='AKIARYVVJ52TE25M3YFZ', secret='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')
     #BUCKET = "common-voice-sw-dataset"
     #PREFIX = "v9_ctc"
@@ -607,18 +505,6 @@ def main():
         }
     )
 
-    # create model
-    model = AutoModelForCTC.from_pretrained(
-        model_args.model_name_or_path,
-        cache_dir=model_args.cache_dir,
-        config=config,
-        use_auth_token=data_args.use_auth_token,
-    )
-
-    # freeze encoder
-    if model_args.freeze_feature_encoder:
-        model.freeze_feature_encoder()
-
     # 6. Now we preprocess the datasets including loading the audio, resampling and normalization
     # Thankfully, `datasets` takes care of automatically loading and resampling the audio,
     # so that we just need to set the correct target sampling rate and normalize the input
@@ -676,14 +562,6 @@ def main():
             input_columns=["input_length"],
         )
 
-
-    # for large datasets it is advised to run the preprocessing on a
-    # single machine first with ``args.preprocessing_only`` since there will mostly likely
-    # be a timeout when running the script in distributed mode.
-    # In a second step ``args.preprocessing_only`` can then be set to `False` to load the
-    # cached dataset
-
-    
     # save vocab file
     # save datasets
     print("Saving datasets to S3")
