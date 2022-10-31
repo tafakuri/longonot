@@ -106,7 +106,7 @@ def main():
     parentFolder = file_path.parent.absolute()
 
     outputPath = os.path.join(parentFolder , "output-8")
-    vocalsPath = os.path.join(outputPath , fileName, "vocals.wav")
+    vocalsPath = os.path.join(outputPath , fileName, "vocals.flac")
 
     chunksPath = os.path.join(outputPath , fileName, "chunks-withMin")
 
@@ -148,8 +148,6 @@ def main():
             else:
                 allVocals = np.concatenate((allVocals, vocals), axis=0)
             
-        
-
         # AudionSegment has an overload that can be initialized with a bytestring, but it
         # results in corrupt audio when writing file output. To get around this, we use
         # soundFile to write out the vocals file and then use the file-based initializtion
