@@ -1,6 +1,11 @@
 datasets >= 1.18.0
-torch >= 1.5
+torch
 torchaudio
+transformers
 librosa
+tensorboard
+huggingface_hub
 jiwer
 evaluate
+accelerate
+wandb
