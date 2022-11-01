@@ -1,0 +1,8 @@
+datasets 
+transformers
+torch
+torchaudio
+accelerate
+librosa
+tensorboard
+huggingface_hub
