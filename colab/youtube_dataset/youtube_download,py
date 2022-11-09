@@ -23,7 +23,7 @@ def get_playlist_metadata(playlist_url: str):
 
 
 
-def get_playlist_items(playlist_id: str):
+def get_playlist_items(playlist_id: str, yt_api:str):
   URL1 = 'https://www.googleapis.com/youtube/v3/playlistItems?part=contentDetails&maxResults=50&fields=items/contentDetails/videoId,nextPageToken&key={}&playlistId={}&pageToken='.format(yt_api, playlist_id)
 
   next_page = ''
@@ -128,4 +128,3 @@ def download_playlist_items(playlistInfo, videoUrls):
         # save file
         s3.put(progress_tracker, progress_tracker_s3)
 
-        
