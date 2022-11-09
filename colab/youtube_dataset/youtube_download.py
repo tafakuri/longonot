@@ -23,8 +23,8 @@ def get_playlist_metadata(playlist_url: str):
 
 
 
-def get_playlist_items(playlist_id: str):
-  URL1 = 'https://www.googleapis.com/youtube/v3/playlistItems?part=contentDetails&maxResults=50&fields=items/contentDetails/videoId,nextPageToken&key={}&playlistId={}&pageToken='.format(yt_api, playlist_id)
+def get_playlist_items(playlist_id: str, api_key: str):
+  URL1 = 'https://www.googleapis.com/youtube/v3/playlistItems?part=contentDetails&maxResults=50&fields=items/contentDetails/videoId,nextPageToken&key={}&playlistId={}&pageToken='.format(api_key, playlist_id)
 
   next_page = ''
   vid_list = [] 
