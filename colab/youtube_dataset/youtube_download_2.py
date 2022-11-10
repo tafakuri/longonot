@@ -43,7 +43,7 @@ def get_playlist_items(playlist_id: str, api_key: str):
   return vid_list
 
 
-def process_downloaded_audio(audioFile: str):
+def process_downloaded_audio(audioFile: str, s3_root_path:str, s3_output_folder:str):
     # split file into smaller chunks
     print("  Splitting voice sections ...", end='')
     os.system("python split_segments.py --file_path "+ audioFile +" --cleanup_vocals_files")
