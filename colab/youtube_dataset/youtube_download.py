@@ -8,7 +8,9 @@ from os.path import isfile, join
 from pathlib import Path
 import json, requests
 
-s3,s3_root_path,s3_output_folder = None
+s3 = None
+s3_root_path = None
+s3_output_folder = None
 
 def set_global_variables(input_s3,input_s3_root_path,input_s3_output_folder):
   global s3
