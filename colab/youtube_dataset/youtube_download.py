@@ -8,6 +8,17 @@ from os.path import isfile, join
 from pathlib import Path
 import json, requests
 
+s3,s3_root_path,s3_output_folder = None
+
+def set_global_variables(input_s3,input_s3_root_path,input_s3_output_folder):
+  global s3
+  global s3_root_path
+  global s3_output_folder
+  s3 = input_s3
+  s3_root_path = input_s3_root_path
+  s3_output_folder = input_s3_output_folder
+
+
 def get_playlist_metadata(playlist_url: str):
   ydl_opts = {
       'ignoreerrors': True,
@@ -43,7 +54,7 @@ def get_playlist_items(playlist_id: str, api_key: str):
   return vid_list
 
 
-def process_downloaded_audio(audioFile: str):
+def process_downloaded_audio(audioFile: str, s3,s3_root_path,s3_output_folder):
     # split file into smaller chunks
     print("  Splitting voice sections ...", end='')
     os.system("python split_segments.py --file_path "+ audioFile +" --cleanup_vocals_files")
@@ -74,7 +85,7 @@ def download_progress_hook(d):
   if d['status'] == 'finished':
       filename=d['filename']
       print(" "+filename)
-      process_downloaded_audio(os.path.abspath(d['filename']))
+      process_downloaded_audio(os.path.abspath(d['filename']), s3,s3_root_path,s3_output_folder)
 
 def download_playlist_items(playlistInfo, videoUrls, s3, s3_root_path):
     playlistTitle = playlistInfo['title'].replace(' ', '_').lower()
