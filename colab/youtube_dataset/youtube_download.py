@@ -90,7 +90,7 @@ def download_progress_hook(d):
       process_downloaded_audio(os.path.abspath(d['filename']), s3,s3_root_path,s3_output_folder)
 
 def download_playlist_items(playlistInfo, videoUrls, s3, s3_root_path):
-    playlistTitle = playlistInfo['title'].replace(' ', '_').lower()
+    playlistTitle = playlistInfo['title'].replace(' ', '_').replace('\'', '_').lower()
     playlistId = playlistInfo['id']
 
     # dowload options
