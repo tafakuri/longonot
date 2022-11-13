@@ -91,7 +91,6 @@ def download_progress_hook(d):
 
 def download_playlist_items(playlistInfo, videoUrls, s3, s3_root_path):
     playlistTitle = playlistInfo['title'].replace(' ', '_').replace('\'', '_').lower()
-    print(playlistTitle)
     playlistId = playlistInfo['id']
 
     # dowload options
