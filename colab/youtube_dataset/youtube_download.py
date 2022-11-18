@@ -110,7 +110,7 @@ def download_playlist_items(playlistInfo, videoUrls, s3, s3_root_path):
     #S3 metadata
 
     progress_tracker = f"progress_{playlistTitle}_{playlistId}.log"
-    progress_tracker_s3 = f"s3://{s3_root_path}/{progress_tracker}"
+    progress_tracker_s3 = f"s3://{s3_root_path}/_progressFiles/{progress_tracker}"
     if(s3.exists(progress_tracker_s3)):
         s3.download(progress_tracker_s3,progress_tracker)
     else:
