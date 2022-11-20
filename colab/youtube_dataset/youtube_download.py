@@ -109,13 +109,12 @@ def download_playlist_items(playlistInfo, videoUrls, s3, s3_root_path,num_slots 
     workingFolder = 'dataset'
 
     if(num_slots > 1):
-      print(f"Splitting input list of {len(videoUrls)} into {num_slots}")
+      print(f"Splitting input list of {len(videoUrls)} into {num_slots} slots")
       itemsPerSlot = math.ceil(len(videoUrls)/num_slots)
       startIndex = slot_index*itemsPerSlot
-      # we could assign to filtered URLS here directly - I'm adding this step to help with logging
-      filteredUrls = videoUrls[startIndex: min(startIndex+itemsPerSlot, len(videoUrls))]
-      print(f"filteredUrls has length {len(filteredUrls)}")
-      videoUrls = filteredUrls
+      videoUrls = videoUrls[startIndex: min(startIndex+itemsPerSlot, len(videoUrls))]
+      print(f"filtered videoUrls has length {len(videoUrls)}")
+
     #S3 metadata
 
     progress_tracker = f"progress_{playlistTitle}_{playlistId}.log"
