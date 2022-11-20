@@ -111,8 +111,9 @@ def download_playlist_items(playlistInfo, videoUrls, s3, s3_root_path,num_slots 
     if(num_slots > 1):
       print(f"Splitting input list of {len(videoUrls)} into {num_slots}")
       itemsPerSlot = math.ceil(len(videoUrls)/num_slots)
+      startIndex = slot_index*itemsPerSlot
       # we could assign to filtered URLS here directly - I'm adding this step to help with logging
-      filteredUrls = range(slot_index*itemsPerSlot, len(videoUrls), itemsPerSlot)
+      filteredUrls = videoUrls[startIndex: min(startIndex+itemsPerSlot, len(videoUrls))]
       print(f"filteredUrls has length {len(filteredUrls)}")
       videoUrls = filteredUrls
     #S3 metadata
