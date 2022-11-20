@@ -7,6 +7,7 @@ from os import listdir
 from os.path import isfile, join
 from pathlib import Path
 import json, requests
+import math
 
 s3 = None
 s3_root_path = None
@@ -89,7 +90,7 @@ def download_progress_hook(d):
       print(" "+filename)
       process_downloaded_audio(os.path.abspath(d['filename']), s3,s3_root_path,s3_output_folder)
 
-def download_playlist_items(playlistInfo, videoUrls, s3, s3_root_path):
+def download_playlist_items(playlistInfo, videoUrls, s3, s3_root_path,num_slots =1, slot_index =0, skip_downloads= False):
     playlistTitle = playlistInfo['title'].replace(' ', '_').replace('\'', '_').lower()
     playlistId = playlistInfo['id']
 
@@ -107,9 +108,19 @@ def download_playlist_items(playlistInfo, videoUrls, s3, s3_root_path):
     }
     workingFolder = 'dataset'
 
+    if(num_slots > 1):
+      print(f"Splitting input list of {len(videoUrls)} into {num_slots}")
+      itemsPerSlot = math.ceil(len(videoUrls)/num_slots)
+      # we could assign to filtered URLS here directly - I'm adding this step to help with logging
+      filteredUrls = range(slot_index*itemsPerSlot, len(videoUrls), itemsPerSlot)
+      print(f"filteredUrls has length {len(filteredUrls)}")
+      videoUrls = filteredUrls
     #S3 metadata
 
     progress_tracker = f"progress_{playlistTitle}_{playlistId}.log"
+    if(slot_index > 0):
+      progress_tracker = f"progress_{playlistTitle}_{playlistId}_{slot_index}.log"
+
     progress_tracker_s3 = f"s3://{s3_root_path}/_progressFiles/{progress_tracker}"
     if(s3.exists(progress_tracker_s3)):
         s3.download(progress_tracker_s3,progress_tracker)
@@ -128,6 +139,10 @@ def download_playlist_items(playlistInfo, videoUrls, s3, s3_root_path):
           continue
         if (current_url in processed_lines):
           print("skipping "+ current_url)
+          continue
+        # Debug hook
+        if (skip_downloads):
+          print("[DEBUG] skipping "+ current_url)
           continue
 
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
