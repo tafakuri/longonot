@@ -164,21 +164,20 @@ def download_playlist_items(playlistInfo, videoUrls, s3, s3_root_path,num_slots 
           current_url = record
         except:
           continue
+        
         if (current_url in processed_lines):
           print("skipping "+ current_url)
-          continue
-        # Debug hook
-        if (skip_downloads):
+        elif (skip_downloads):
+          # Debug hook
           print("[DEBUG] skipping "+ current_url)
-          continue
+        else:
+          with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+              error_code = ydl.download(current_url)
 
-        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            error_code = ydl.download(current_url)
-
-        # Append current URl to end of file
-        with open(progress_tracker, "a") as file_object:
-          file_object.write(current_url)
-          file_object.write("\n")
-        
-        # save file
-        s3.put(progress_tracker, progress_tracker_s3)
+          # Append current URl to end of file
+          with open(progress_tracker, "a") as file_object:
+            file_object.write(current_url)
+            file_object.write("\n")
+          
+          # save file
+          s3.put(progress_tracker, progress_tracker_s3)
