@@ -111,6 +111,7 @@ def read_progress_lines_from_all_slots(playlistTitle,playlistId,num_slots):
     else:
       print("progress file not found on S3: "+ progress_tracker_s3_other)
 
+  print(f"Processed video urls across all slots: {len(processed_lines)}")
   return processed_lines
 
 def download_playlist_items(playlistInfo, videoUrls, s3, s3_root_path,num_slots =1, slot_index =0, skip_downloads= False):
