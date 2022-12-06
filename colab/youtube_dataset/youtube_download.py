@@ -160,17 +160,18 @@ def download_playlist_items(playlistInfo, videoUrls, s3, s3_root_path,num_slots 
           processed_lines = [line.rstrip() for line in file]
   
     for record in tqdm.notebook.tqdm(videoUrls, desc="Downloading"):
-        try:
-          current_url = record
-        except:
-          continue
-        
-        if (current_url in processed_lines):
-          print("skipping "+ current_url)
-        elif (skip_downloads):
+          try:
+            current_url = record
+          except:
+            continue
+          if (current_url in processed_lines):
+            print("skipping "+ current_url)
+            continue
           # Debug hook
-          print("[DEBUG] skipping "+ current_url)
-        else:
+          if (skip_downloads):
+            print("[DEBUG] skipping "+ current_url)
+            continue
+
           with yt_dlp.YoutubeDL(ydl_opts) as ydl:
               error_code = ydl.download(current_url)
 
