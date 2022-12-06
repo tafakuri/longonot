@@ -132,6 +132,18 @@ def download_playlist_items(playlistInfo, videoUrls, s3, s3_root_path,num_slots 
     with open(progress_tracker) as file:
         processed_lines = [line.rstrip() for line in file]
 
+    if(num_slots > 1):
+      print("Reading progress tracking info from all slots")
+      # files could have been downloaded on other slots during previous runs. Read all progress files
+      for other_slots in range(0, num_slots):
+        progress_tracker_other = f"progress_{playlistTitle}_{playlistId}_{other_slots}.log"
+        progress_tracker_s3_other = f"s3://{s3_root_path}/_progressFiles/{progress_tracker_other}"
+      if(s3.exists(progress_tracker_s3_other)):
+          s3.download(progress_tracker_s3_other,progress_tracker_other)
+          with open(progress_tracker_other) as file:
+            processed_lines += [line.rstrip() for line in file]
+
+
     for record in tqdm.notebook.tqdm(videoUrls, desc="Downloading"):
         try:
           current_url = record
