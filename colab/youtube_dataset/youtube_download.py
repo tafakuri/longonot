@@ -8,6 +8,7 @@ from os.path import isfile, join
 from pathlib import Path
 import json, requests
 import math
+from dateutil import parser
 
 s3 = None
 s3_root_path = None
@@ -37,8 +38,8 @@ def get_playlist_metadata(playlist_url: str):
 
 # otehr comment
 
-def get_playlist_items(playlist_id: str, api_key: str):
-  URL1 = 'https://www.googleapis.com/youtube/v3/playlistItems?part=contentDetails&maxResults=50&fields=items/contentDetails/videoId,nextPageToken&key={}&playlistId={}&pageToken='.format(api_key, playlist_id)
+def get_playlist_items(playlist_id: str, api_key: str , min_published_date=None,max_published_date=None):
+  URL1 = 'https://www.googleapis.com/youtube/v3/playlistItems?part=contentDetails,snippet&maxResults=50&fields=items/contentDetails/videoId,nextPageToken,items/snippet/publishedAt,&key={}&playlistId={}&pageToken='.format(api_key, playlist_id)
 
   next_page = ''
   vid_list = [] 
@@ -47,7 +48,14 @@ def get_playlist_items(playlist_id: str, api_key: str):
       results = json.loads(requests.get(URL1 + next_page).text)
       
       for x in results['items']:
-          vid_list.append('https://www.youtube.com/watch?v=' + x['contentDetails']['videoId'])
+          publish_date = parser.isoparse(x['snippet']['publishedAt'])
+          is_valid_date = True
+          if max_published_date is not None:
+              is_valid_date = publish_date <= max_published_date
+          if min_published_date is not None:
+              is_valid_date = publish_date >= min_published_date
+          if is_valid_date:
+              vid_list.append('https://www.youtube.com/watch?v=' + x['contentDetails']['videoId'])
 
       if 'nextPageToken' in results:
           next_page = results['nextPageToken']
