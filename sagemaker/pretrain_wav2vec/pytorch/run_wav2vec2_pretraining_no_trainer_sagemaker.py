@@ -454,8 +454,8 @@ def main():
     # ``args.dataset_config_names`` and ``args.dataset_split_names``
     raw_datasets = DatasetDict()
     if args.dataset_s3_path is not None:
-        s3 = S3FileSystem()
-        raw_datasets = load_from_disk(args.dataset_s3_path, fs=s3)
+        # s3 = S3FileSystem()
+        raw_datasets = load_from_disk(args.dataset_s3_path)
     else:
         datasets_splits = []
         for dataset_config_name, train_split_name in zip(args.dataset_config_names, args.dataset_split_names):
