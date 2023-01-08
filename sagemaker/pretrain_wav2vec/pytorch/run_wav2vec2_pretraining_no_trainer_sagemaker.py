@@ -65,7 +65,6 @@ def parse_args():
     parser = argparse.ArgumentParser(description="Finetune a transformers model on a text classification task")
     parser.add_argument(
         "--dataset_s3_path",
-        nargs="+",
         type=str,
         default=None,
         help="The path to S3 location where the dataset is saved.",
@@ -454,8 +453,9 @@ def main():
     # ``args.dataset_config_names`` and ``args.dataset_split_names``
     raw_datasets = DatasetDict()
     if args.dataset_s3_path is not None:
-        # s3 = S3FileSystem()
-        raw_datasets = load_from_disk(args.dataset_s3_path)
+        #s3 = S3FileSystem()
+        #raw_datasets = load_from_disk(args.dataset_s3_path,fs=s3)
+        raw_datasets = load_from_disk(os.environ['SM_CHANNEL_TRAIN'])
     else:
         datasets_splits = []
         for dataset_config_name, train_split_name in zip(args.dataset_config_names, args.dataset_split_names):

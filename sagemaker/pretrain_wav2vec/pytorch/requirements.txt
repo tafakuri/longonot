@@ -9,3 +9,5 @@ huggingface_hub >= 0.2.1
 setuptools==59.5.0
 wandb
 soundfile
+s3fs
+boto3
