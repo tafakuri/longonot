@@ -25,7 +25,7 @@ from typing import Dict, List, Optional, Union
 
 import datasets
 import torch
-from datasets import DatasetDict, concatenate_datasets, load_dataset
+from datasets import DatasetDict, concatenate_datasets, load_dataset,load_from_disk
 from torch.utils.data.dataloader import DataLoader
 from tqdm.auto import tqdm
 from torch.utils.tensorboard import SummaryWriter
@@ -61,6 +61,13 @@ def configure_logger():
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Finetune a transformers model on a text classification task")
+    parser.add_argument(
+        "--dataset_s3_path",
+        nargs="+",
+        type=str,
+        default=None,
+        help="The path to S3 location where the dataset is saved.",
+    )
     parser.add_argument(
         "--dataset_names",
         nargs="+",
@@ -443,25 +450,29 @@ def main():
     # 1. Download and create train, validation dataset
     # We load all dataset configuration and datset split pairs passed in
     # ``args.dataset_config_names`` and ``args.dataset_split_names``
-    datasets_splits = []
-    for dataset_config_name, train_split_name in zip(args.dataset_config_names, args.dataset_split_names):
-        for dataset_name in args.dataset_names:
-            # load dataset
-            dataset_split = load_dataset(
-                dataset_name,
-                dataset_config_name,
-                split=train_split_name,
-                cache_dir=args.cache_dir,
-                use_auth_token=args.dataset_use_auth_token
-            )
-            datasets_splits.append(dataset_split)
-
-    # Next, we concatenate all configurations and splits into a single training dataset
     raw_datasets = DatasetDict()
-    if len(datasets_splits) > 1:
-        raw_datasets["train"] = concatenate_datasets(datasets_splits).shuffle(seed=args.seed)
+    if args.dataset_s3_path is not None:
+        raw_datasets = load_from_disk(args.dataset_s3_path)
     else:
-        raw_datasets["train"] = datasets_splits[0]
+        datasets_splits = []
+        for dataset_config_name, train_split_name in zip(args.dataset_config_names, args.dataset_split_names):
+            for dataset_name in args.dataset_names:
+                # load dataset
+                dataset_split = load_dataset(
+                    dataset_name,
+                    dataset_config_name,
+                    split=train_split_name,
+                    cache_dir=args.cache_dir,
+                    use_auth_token=args.dataset_use_auth_token
+                )
+                datasets_splits.append(dataset_split)
+
+        # Next, we concatenate all configurations and splits into a single training dataset
+        raw_datasets = DatasetDict()
+        if len(datasets_splits) > 1:
+            raw_datasets["train"] = concatenate_datasets(datasets_splits).shuffle(seed=args.seed)
+        else:
+            raw_datasets["train"] = datasets_splits[0]
 
     # Take ``args.validation_split_percentage`` from the training dataset for the validation_split_percentage
     num_validation_samples = raw_datasets["train"].num_rows * args.validation_split_percentage // 100
