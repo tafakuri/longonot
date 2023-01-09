@@ -175,6 +175,12 @@ class DataTrainingArguments:
     dataset_s3_prefix: str = field(
         default=None, metadata={"help": "The path to read dataset from in S3."}
     )
+    dataset_s3_key: str = field(
+        default=None, metadata={"help": "The key to read dataset from in S3."}
+    )
+    dataset_s3_secret: str = field(
+        default=None, metadata={"help": "The secret to read dataset from in S3."}
+    )
     overwrite_cache: bool = field(
         default=False, metadata={"help": "Overwrite the cached preprocessed datasets or not."}
     )
@@ -376,7 +382,7 @@ def main():
     set_seed(training_args.seed)
 
     # Initialize S3 filesystem
-    s3 = datasets.filesystems.S3FileSystem(key='AKIARYVVJ52TE25M3YFZ', secret='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')
+    s3 = datasets.filesystems.S3FileSystem(key= data_args.dataset_s3_key, secret=data_args.dataset_s3_secret)
 
     BUCKET = data_args.dataset_s3_bucket
     PREFIX = data_args.dataset_s3_prefix
