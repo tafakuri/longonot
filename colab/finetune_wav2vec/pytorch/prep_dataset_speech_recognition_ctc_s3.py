@@ -306,7 +306,14 @@ def create_vocabulary_from_data(
 
     return vocab_dict
 
-
+def set_global_variables(input_s3,input_s3_root_path,input_s3_output_folder):
+  global s3
+  global s3_root_path
+  global s3_output_folder
+  s3 = input_s3
+  s3_root_path = input_s3_root_path
+  s3_output_folder = input_s3_output_folder
+    
 def main():
     # See all possible arguments in src/transformers/training_args.py
     # or by passing the --help flag to this script.
@@ -340,9 +347,6 @@ def main():
 
     # Set seed before initializing model.
     set_seed(training_args.seed)
-    
-    s3 = datasets.filesystems.S3FileSystem(key='AKIARYVVJ52TE25M3YFZ', secret='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')
-
 
     BUCKET = data_args.dataset_s3_bucket
     PREFIX = data_args.dataset_s3_prefix
