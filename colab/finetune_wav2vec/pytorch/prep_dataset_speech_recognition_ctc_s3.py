@@ -175,6 +175,12 @@ class DataTrainingArguments:
     dataset_s3_prefix: str = field(
         default=None, metadata={"help": "The path to read dataset from in S3."}
     )
+    dataset_s3_key: str = field(
+        default=None, metadata={"help": "The key to read dataset from in S3."}
+    )
+    dataset_s3_secret: str = field(
+        default=None, metadata={"help": "The secret to read dataset from in S3."}
+    )
     overwrite_cache: bool = field(
         default=False, metadata={"help": "Overwrite the cached preprocessed datasets or not."}
     )
@@ -306,13 +312,6 @@ def create_vocabulary_from_data(
 
     return vocab_dict
 
-def set_global_variables(input_s3,input_s3_root_path,input_s3_output_folder):
-  global s3
-  global s3_root_path
-  global s3_output_folder
-  s3 = input_s3
-  s3_root_path = input_s3_root_path
-  s3_output_folder = input_s3_output_folder
     
 def main():
     # See all possible arguments in src/transformers/training_args.py
@@ -347,7 +346,8 @@ def main():
 
     # Set seed before initializing model.
     set_seed(training_args.seed)
-
+    
+    s3 = datasets.filesystems.S3FileSystem(key= data_args.dataset_s3_key, secret=data_args.dataset_s3_secret)
     BUCKET = data_args.dataset_s3_bucket
     PREFIX = data_args.dataset_s3_prefix
 
