@@ -455,10 +455,13 @@ def main():
     # ``args.dataset_config_names`` and ``args.dataset_split_names``
     raw_datasets = DatasetDict()
     if args.dataset_use_mounted_s3_path:
-        raw_datasets["train"] = load_from_disk(os.environ['SM_CHANNEL_TRAIN'])
+        if args.dataset_is_audio_arrays_only:  
+            raw_datasets = load_from_disk(os.environ['SM_CHANNEL_TRAIN'])
+        else:
+            raw_datasets["train"] = load_from_disk(os.environ['SM_CHANNEL_TRAIN'])   
         # for experimentation - to speed up runs, sample dataset to 10%
-        num_sampled_samples = raw_datasets["train"].num_rows * 10 // 100
-        raw_datasets["train"] = raw_datasets["train"].select(range(num_sampled_samples))
+        # num_sampled_samples = raw_datasets["train"].num_rows * 10 // 100
+        # raw_datasets["train"] = raw_datasets["train"].select(range(num_sampled_samples))
     else:
         datasets_splits = []
         for dataset_config_name, train_split_name in zip(args.dataset_config_names, args.dataset_split_names):
