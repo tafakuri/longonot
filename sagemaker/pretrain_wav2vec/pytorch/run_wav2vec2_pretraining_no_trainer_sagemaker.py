@@ -64,11 +64,12 @@ def configure_logger():
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Finetune a transformers model on a text classification task")
+
     parser.add_argument(
-        "--dataset_s3_path",
-        type=str,
-        default=None,
-        help="The path to S3 location where the dataset is saved.",
+        "--dataset_use_mounted_s3_path", default=False, type=lambda x: (str(x).lower() == 'true'), help="Use mounted S3 training data path"
+    )
+    parser.add_argument(
+        "--dataset_is_audio_arrays_only", default=False, type=lambda x: (str(x).lower() == 'true'), help="Indicates whether dataset is just composed of audio arrays"
     )
     parser.add_argument(
         "--dataset_names",
@@ -453,9 +454,7 @@ def main():
     # We load all dataset configuration and datset split pairs passed in
     # ``args.dataset_config_names`` and ``args.dataset_split_names``
     raw_datasets = DatasetDict()
-    if args.dataset_s3_path is not None:
-        #s3 = S3FileSystem()
-        #raw_datasets = load_from_disk(args.dataset_s3_path,fs=s3)
+    if args.dataset_use_mounted_s3_path:
         raw_datasets["train"] = load_from_disk(os.environ['SM_CHANNEL_TRAIN'])
         # for experimentation - to speed up runs, sample dataset to 10%
         num_sampled_samples = raw_datasets["train"].num_rows * 10 // 100
@@ -502,12 +501,11 @@ def main():
 
     import librosa
     # make sure that dataset decodes audio with correct sampling rate
-    """
-    # Temporarily remove the cast_column call
-    raw_datasets = raw_datasets.cast_column(
-        args.audio_column_name, datasets.features.Audio(sampling_rate=feature_extractor.sampling_rate)
-    )
-    """
+    if not args.dataset_is_audio_arrays_only:
+        raw_datasets = raw_datasets.cast_column(
+            args.audio_column_name, datasets.features.Audio(sampling_rate=feature_extractor.sampling_rate)
+        )
+
     # This code assumes that data has already been sampled at 16000
     
     # only normalized-inputs-training is supported
@@ -521,9 +519,21 @@ def main():
     min_length = int(args.min_duration_in_seconds * feature_extractor.sampling_rate)
 
     def prepare_dataset(batch):
+        audio_array = None
+        item_sampling_rate = None
+        
+        if args.dataset_is_audio_arrays_only:        
+            audio_array =  batch[args.audio_column_name]
+            item_sampling_rate = 16000
+        else:
+            sample = batch[args.audio_column_name]
+            audio_array = sample["array"]
+            item_sampling_rate = sample["sampling_rate"]
+       
         inputs = feature_extractor(
-            batch[args.audio_column_name], sampling_rate=16000, max_length=max_length, truncation=True
+            audio_array, sampling_rate=item_sampling_rate, max_length=max_length, truncation=True
         )
+            
         batch["input_values"] = inputs.input_values[0]
         batch["input_length"] = len(inputs.input_values[0])
 
