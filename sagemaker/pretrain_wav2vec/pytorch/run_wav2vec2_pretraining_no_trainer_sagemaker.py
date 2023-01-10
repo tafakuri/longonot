@@ -50,6 +50,7 @@ from transformers.models.wav2vec2.modeling_wav2vec2 import _compute_mask_indices
 from datasets.filesystems import S3FileSystem
 
 
+
 logger = get_logger(__name__)
 
 import sys
@@ -455,7 +456,10 @@ def main():
     if args.dataset_s3_path is not None:
         #s3 = S3FileSystem()
         #raw_datasets = load_from_disk(args.dataset_s3_path,fs=s3)
-        raw_datasets = load_from_disk(os.environ['SM_CHANNEL_TRAIN'])
+        raw_datasets["train"] = load_from_disk(os.environ['SM_CHANNEL_TRAIN'])
+        # for experimentation - to speed up runs, sample dataset to 10%
+        num_sampled_samples = raw_datasets["train"].num_rows * 10 // 100
+        raw_datasets["train"] = raw_datasets["train"].select(range(num_sampled_samples))
     else:
         datasets_splits = []
         for dataset_config_name, train_split_name in zip(args.dataset_config_names, args.dataset_split_names):
@@ -496,11 +500,16 @@ def main():
     # via the `feature_extractor`
     feature_extractor = Wav2Vec2FeatureExtractor.from_pretrained(args.model_name_or_path)
 
+    import librosa
     # make sure that dataset decodes audio with correct sampling rate
+    """
+    # Temporarily remove the cast_column call
     raw_datasets = raw_datasets.cast_column(
         args.audio_column_name, datasets.features.Audio(sampling_rate=feature_extractor.sampling_rate)
     )
-
+    """
+    # This code assumes that data has already been sampled at 16000
+    
     # only normalized-inputs-training is supported
     if not feature_extractor.do_normalize:
         raise ValueError(
@@ -512,10 +521,8 @@ def main():
     min_length = int(args.min_duration_in_seconds * feature_extractor.sampling_rate)
 
     def prepare_dataset(batch):
-        sample = batch[args.audio_column_name]
-
         inputs = feature_extractor(
-            sample["array"], sampling_rate=sample["sampling_rate"], max_length=max_length, truncation=True
+            batch[args.audio_column_name], sampling_rate=16000, max_length=max_length, truncation=True
         )
         batch["input_values"] = inputs.input_values[0]
         batch["input_length"] = len(inputs.input_values[0])
