@@ -456,9 +456,10 @@ def main():
     raw_datasets = DatasetDict()
     if args.dataset_use_mounted_s3_path:
         if args.dataset_is_audio_arrays_only:  
-            raw_datasets = load_from_disk(os.environ['SM_CHANNEL_TRAIN'])
+            raw_datasets = load_from_disk(os.environ['SM_CHANNEL_TRAIN'],cache_dir=args.cache_dir)
         else:
-            raw_datasets["train"] = load_from_disk(os.environ['SM_CHANNEL_TRAIN'])   
+            raw_datasets = load_from_disk(os.environ['SM_CHANNEL_TRAIN'],cache_dir=args.cache_dir)   
+            #raw_datasets["train"] = load_from_disk(os.environ['SM_CHANNEL_TRAIN'])   
         # for experimentation - to speed up runs, sample dataset to 10%
         # num_sampled_samples = raw_datasets["train"].num_rows * 10 // 100
         # raw_datasets["train"] = raw_datasets["train"].select(range(num_sampled_samples))
